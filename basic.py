@@ -3,6 +3,7 @@
 #######################################
 
 from strings_with_arrows import *
+from basic_calculation import Calculate_fractions
 
 #######################################
 # CONSTANTS
@@ -445,16 +446,21 @@ class Number:
 
 	def added_to(self, other):
 		if isinstance(other, Number):
-			return Number(self.value + other.value).set_context(self.context), None
+			fraction = Calculate_fractions(self.value)
+			fraction.addition_subtraction(other.value)
+			return Number(fraction.displayFraction()).set_context(self.context), None
 
 	def subbed_by(self, other):
 		if isinstance(other, Number):
-			return Number(self.value - other.value).set_context(self.context), None
+			fraction = Calculate_fractions(self.value)
+			fraction.addition_subtraction(other.value, "-")
+			return Number(fraction.displayFraction()).set_context(self.context), None
 
 	def multed_by(self, other):
 		if isinstance(other, Number):
-			return Number(self.value * other.value).set_context(self.context), None
-
+			fraction = Calculate_fractions(self.value)
+			fraction.multiplication(other.value)
+			return Number(fraction.displayFraction()).set_context(self.context), None
 	def dived_by(self, other):
 		if isinstance(other, Number):
 			if other.value == 0:
@@ -464,22 +470,26 @@ class Number:
 					self.context
 				)
 
-			return Number(self.value / other.value).set_context(self.context), None
+			fraction = Calculate_fractions(self.value)
+			fraction.division(other.value)
+			return Number(fraction.displayFraction()).set_context(self.context), None
 
 	def powed_by(self, other):
 		if isinstance(other, Number):
-			if self.value == 0 and other.value < 0:
-				print("error found on power")
-				return None, RTError(
-					other.pos_start, other.pos_end,
-					'zero powered by a negative number',
-					self.context
-				)
-			return Number(pow(self.value, other.value)).set_context(self.context), None
+			fraction = Calculate_fractions(self.value)
+			fraction.power(other.value)
+			return Number(fraction.displayFraction()).set_context(self.context), None
 
 	def factored_by(self, other):
 		if isinstance(other, Number):
-			return Number(self.calculate_factorial(self.value)).set_context(self.context), None
+			try:
+				return Number(self.calculate_factorial(self.value)).set_context(self.context), None
+			except:
+				return None, RTError(
+					other.pos_start, other.pos_end,
+					'can calculate factorial of a fraction',
+					self.context
+				)
 
 
 	def __repr__(self):
