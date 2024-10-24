@@ -141,7 +141,7 @@ class Calculate_fractions:
                 elif operation == "*":
                     self.floating_number = float(self.fraction) * float(other_fraction)
                 elif operation == "/":
-                    self.floating_number = float(self.fraction) * float(other_fraction)
+                    self.floating_number = float(self.fraction) / float(other_fraction)
                 elif operation == "^":
                     self.floating_number = pow(float(self.fraction), float(other_fraction))
             except:
