@@ -494,21 +494,21 @@ class Number:
 
     def added_to(self, other):
         if isinstance(other, Number):
-            fraction = Calculate_fractions(self.value)
+            fraction = CalculateFractions(self.value)
             fraction.addition_subtraction(other.value)
-            return Number(fraction.displayFraction()).set_context(self.context), None
+            return Number(fraction.display_fraction()).set_context(self.context), None
 
     def subbed_by(self, other):
         if isinstance(other, Number):
-            fraction = Calculate_fractions(self.value)
+            fraction = CalculateFractions(self.value)
             fraction.addition_subtraction(other.value, "-")
-            return Number(fraction.displayFraction()).set_context(self.context), None
+            return Number(fraction.display_fraction()).set_context(self.context), None
 
     def multed_by(self, other):
         if isinstance(other, Number):
-            fraction = Calculate_fractions(self.value)
+            fraction = CalculateFractions(self.value)
             fraction.multiplication(other.value)
-            return Number(fraction.displayFraction()).set_context(self.context), None
+            return Number(fraction.display_fraction()).set_context(self.context), None
 
     def dived_by(self, other):
         if isinstance(other, Number):
@@ -519,15 +519,15 @@ class Number:
                     self.context
                 )
 
-            fraction = Calculate_fractions(self.value)
+            fraction = CalculateFractions(self.value)
             fraction.division(other.value)
-            return Number(fraction.displayFraction()).set_context(self.context), None
+            return Number(fraction.display_fraction()).set_context(self.context), None
 
     def powed_by(self, other):
         if isinstance(other, Number):
-            fraction = Calculate_fractions(self.value)
+            fraction = CalculateFractions(self.value)
             fraction.power(other.value)
-            return Number(fraction.displayFraction()).set_context(self.context), None
+            return Number(fraction.display_fraction()).set_context(self.context), None
 
     def copy(self):
         copy = Number(self.value)
