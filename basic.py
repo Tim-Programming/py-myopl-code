@@ -254,6 +254,15 @@ class NumberNode:
     def __repr__(self):
         return f'{self.tok}'
 
+class SymbolicNode:
+    def __init__(self, name):
+        self.name = name  # Der Name der symbolischen Variable, z.B. "_a"
+
+        self.pos_start = self.var_name_tok.pos_start
+        self.pos_end = self.var_name_tok.pos_end
+
+    def __repr__(self):
+        return f'SymbolicNode({self.var_name_tok})'
 
 class VarAccessNode:
     def __init__(self, var_name_tok):
@@ -364,7 +373,7 @@ class Parser:
         if tok.type == TT_SYMBOLIC_VAR:
             res.register_advancement()
             self.advance()
-            return res.success(NumberNode(tok))
+            return res.success(SymbolicNode(tok.value))  # Übergebe den Namen der Variablen
 
         elif tok.type == TT_IDENTIFIER:
             res.register_advancement()
@@ -612,6 +621,17 @@ class Interpreter:
             Number(node.tok.value).set_context(context).set_pos(node.pos_start, node.pos_end)
         )
 
+    def visit_SymbolicNode(self, node, context):
+        # Hier nehmen wir an, dass `node` eine symbolische Variable enthält
+        symbolic_var = node.name  # Verwende 'name' anstelle von 'value'
+
+        # Entferne das führende "_" von der symbolischen Variable
+        if symbolic_var.startswith('_'):
+            symbolic_var = symbolic_var[1:]
+
+        # Rückgabe der angepassten symbolischen Variable
+        return symbolic_var
+
     def visit_VarAccessNode(self, node, context):
         res = RTResult()
         var_name = node.var_name_tok.value
@@ -700,5 +720,5 @@ def run(fn, text):
     context.symbol_table = global_symbol_table
     result = interpreter.visit(ast.node, context)
 
-    return ast.node, ast.error
+    #return ast.node, ast.error
     return result.value, result.error
