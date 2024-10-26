@@ -4,12 +4,17 @@ class CalculateFractions:
     def __init__(self, fraction: str):
         # Flag, um zu erkennen, ob eine Dezimalzahl verwendet wurde
         self.is_decimal = False
+        self.is_symbolic = False
 
-        if self.check_float(fraction):
+        if '_' in str(fraction):
+            self.is_symbolic = True
+        elif self.check_float(fraction):
             self.is_decimal = True  # Setze das Flag auf True
 
-        # Umwandlung in einen Bruch
-        self.fraction = Fraction(fraction)
+        try:
+            self.fraction = Fraction(fraction)
+        except:
+            self.fraction = fraction
 
     def display_fraction(self) -> str:
         # Ausgabe als Dezimalzahl, wenn das Flag gesetzt ist

@@ -102,6 +102,7 @@ TT_INT = 'INT'
 TT_FLOAT = 'FLOAT'
 TT_IDENTIFIER = 'IDENTIFIER'
 TT_KEYWORD = 'KEYWORD'
+TT_SYMBOLIC_VAR = "SYMBOLIC_VAR"
 TT_PLUS = 'PLUS'
 TT_MINUS = 'MINUS'
 TT_MUL = 'MUL'
@@ -164,6 +165,8 @@ class Lexer:
                 tokens.append(self.make_number())
             elif self.current_char in LETTERS:
                 tokens.append(self.make_identifier())
+            elif self.current_char in ('_' + LETTERS):
+                tokens.append(self.make_symbolic_var())
             elif self.current_char == '+':
                 tokens.append(Token(TT_PLUS, pos_start=self.pos))
                 self.advance()
@@ -223,6 +226,17 @@ class Lexer:
             self.advance()
 
         tok_type = TT_KEYWORD if id_str in KEYWORDS else TT_IDENTIFIER
+        return Token(tok_type, id_str, pos_start, self.pos)
+
+    def make_symbolic_var(self):
+        id_str = ''
+        pos_start = self.pos.copy()
+
+        while self.current_char != None and self.current_char in ('_' + LETTERS):
+            id_str += self.current_char
+            self.advance()
+
+        tok_type = TT_SYMBOLIC_VAR
         return Token(tok_type, id_str, pos_start, self.pos)
 
 
@@ -343,6 +357,11 @@ class Parser:
         tok = self.current_tok
 
         if tok.type in (TT_INT, TT_FLOAT):
+            res.register_advancement()
+            self.advance()
+            return res.success(NumberNode(tok))
+
+        if tok.type == TT_SYMBOLIC_VAR:
             res.register_advancement()
             self.advance()
             return res.success(NumberNode(tok))
@@ -681,4 +700,5 @@ def run(fn, text):
     context.symbol_table = global_symbol_table
     result = interpreter.visit(ast.node, context)
 
+    return ast.node, ast.error
     return result.value, result.error
