@@ -254,15 +254,12 @@ class NumberNode:
     def __repr__(self):
         return f'{self.tok}'
 
-class SymbolicNode:
-    def __init__(self, name):
-        self.name = name  # Der Name der symbolischen Variable, z.B. "_a"
-
-        self.pos_start = self.var_name_tok.pos_start
-        self.pos_end = self.var_name_tok.pos_end
+class SymbolicNode(NumberNode):
+    def __init__(self, tok):
+        super().__init__(tok)
 
     def __repr__(self):
-        return f'SymbolicNode({self.var_name_tok})'
+        return f'SYMBOLIC_VAR:{self.tok.value}'
 
 class VarAccessNode:
     def __init__(self, var_name_tok):
@@ -373,7 +370,7 @@ class Parser:
         if tok.type == TT_SYMBOLIC_VAR:
             res.register_advancement()
             self.advance()
-            return res.success(SymbolicNode(tok.value))  # Übergebe den Namen der Variablen
+            return res.success(SymbolicNode(tok))  # Ändern zu SymbolicNode
 
         elif tok.type == TT_IDENTIFIER:
             res.register_advancement()
@@ -521,25 +518,33 @@ class Number:
         return self
 
     def added_to(self, other):
-        if isinstance(other, Number):
+        if isinstance(self, SymbolicVar) or isinstance(other, SymbolicVar):
+            return SymbolicVar(f"{self} + {other}"), None
+        if isinstance(self, Number) and isinstance(other, Number):
             fraction = CalculateFractions(self.value)
             fraction.addition_subtraction(other.value)
             return Number(fraction.display_fraction()).set_context(self.context), None
 
     def subbed_by(self, other):
-        if isinstance(other, Number):
+        if isinstance(self, SymbolicVar) or isinstance(other, SymbolicVar):
+            return SymbolicVar(f"{self} - {other}"), None
+        if isinstance(self, Number) and isinstance(other, Number):
             fraction = CalculateFractions(self.value)
-            fraction.addition_subtraction(other.value, "-")
+            fraction.addition_subtraction(other.value, '-')
             return Number(fraction.display_fraction()).set_context(self.context), None
 
     def multed_by(self, other):
-        if isinstance(other, Number):
+        if isinstance(self, SymbolicVar) or isinstance(other, SymbolicVar):
+            return SymbolicVar(f"{self} * {other}"), None
+        if isinstance(self, Number) and isinstance(other, Number):
             fraction = CalculateFractions(self.value)
             fraction.multiplication(other.value)
             return Number(fraction.display_fraction()).set_context(self.context), None
 
     def dived_by(self, other):
-        if isinstance(other, Number):
+        if isinstance(self, SymbolicVar) or isinstance(other, SymbolicVar):
+            return SymbolicVar(f"{self} / {other}"), None
+        if isinstance(self, Number) and isinstance(other, Number):
             if other.value == 0:
                 return None, RTError(
                     other.pos_start, other.pos_end,
@@ -552,7 +557,9 @@ class Number:
             return Number(fraction.display_fraction()).set_context(self.context), None
 
     def powed_by(self, other):
-        if isinstance(other, Number):
+        if isinstance(self, SymbolicVar) or isinstance(other, SymbolicVar):
+            return SymbolicVar(f"{self} ^ {other}"), None
+        if isinstance(self, Number) and isinstance(other, Number):
             fraction = CalculateFractions(self.value)
             fraction.power(other.value)
             return Number(fraction.display_fraction()).set_context(self.context), None
@@ -565,6 +572,14 @@ class Number:
 
     def __repr__(self):
         return str(self.value)
+
+class SymbolicVar(Number):
+    def __init__(self, name):
+        super().__init__(None)  # Kein numerischer Wert, nur ein Name
+        self.name = name  # Symbolische Repräsentation des Variablennamens
+
+    def __repr__(self):
+        return f"{self.name}"
 
 
 #######################################
@@ -622,15 +637,10 @@ class Interpreter:
         )
 
     def visit_SymbolicNode(self, node, context):
-        # Hier nehmen wir an, dass `node` eine symbolische Variable enthält
-        symbolic_var = node.name  # Verwende 'name' anstelle von 'value'
-
-        # Entferne das führende "_" von der symbolischen Variable
-        if symbolic_var.startswith('_'):
-            symbolic_var = symbolic_var[1:]
-
-        # Rückgabe der angepassten symbolischen Variable
-        return symbolic_var
+        # Setzt das SymbolicNode-Objekt mit Kontext und Position für die Ausgabe
+        return RTResult().success(
+            SymbolicVar(node.tok.value).set_context(context).set_pos(node.pos_start, node.pos_end)
+        )
 
     def visit_VarAccessNode(self, node, context):
         res = RTResult()
