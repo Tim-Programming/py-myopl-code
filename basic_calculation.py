@@ -2,7 +2,7 @@
 # IMPORTS
 #######################################
 
-from math import gcd
+from fractions import Fraction
 
 #######################################
 # BASIC CALCULATION WITH FRACTIONS
@@ -12,7 +12,7 @@ class Calculate_fractions:
     def __init__(self, fraction):
         self.fraction = fraction
         self.counter, self.denominator = self.seperateFraction(fraction)
-
+    
     def seperateFraction(self, string):
         fraction = string
         if "/" in str(fraction):
@@ -20,8 +20,14 @@ class Calculate_fractions:
             counter = int(fraction[0])
             denominator = int(fraction[1])
         else:
-            counter = fraction
-            denominator = 1
+            try:
+                # Try to convert to Fraction first
+                frac = Fraction(fraction)
+                counter = frac.numerator
+                denominator = frac.denominator
+            except (ValueError, TypeError):
+                counter = fraction
+                denominator = 1
         return counter, denominator
 
     def displayFraction(self):
@@ -32,129 +38,119 @@ class Calculate_fractions:
             return f'{self.counter}/{self.denominator}'
 
     def addition_subtraction(self, other_fraction, operation="+"):
-        is_fraction, self.counter, self.denominator = self.convert_fraction_into_float(other_fraction, operation)
-        if is_fraction == None:
+        is_fraction, result_counter, result_denominator = self.convert_fraction_into_float(other_fraction, operation)
+        if is_fraction is None:
+            self.counter = result_counter
+            self.denominator = result_denominator
             return self.counter
+            
+        # Use Fraction for the calculation
+        a = Fraction(self.counter, self.denominator)
+        b = Fraction(*self.seperateFraction(other_fraction))
+        
+        result = a + b if operation == "+" else a - b
+        self.counter = result.numerator
+        self.denominator = result.denominator
 
-        self.other_counter, self.other_denominator = self.seperateFraction(other_fraction)
-        integral_multiple = self.denominator * self.other_denominator
-        multiplicant_fraction_1 = integral_multiple // self.denominator
-        multiplicant_fraction_2 = integral_multiple // self.other_denominator
-
-        self.counter = self.counter * multiplicant_fraction_1
-        self.denominator = self.denominator * multiplicant_fraction_1
-        self.other_counter = self.other_counter * multiplicant_fraction_2
-        self.other_denominator = self.other_denominator * multiplicant_fraction_2
-        if operation == "+":
-            self.counter = int(self.counter) + int(self.other_counter)
-        elif operation == "-":
-            self.counter = int(self.counter) - int(self.other_counter)
     def multiplication(self, other_fraction):
-        is_fraction, self.counter, self.denominator = self.convert_fraction_into_float(other_fraction, "*")
-        if is_fraction == None:
+        is_fraction, result_counter, result_denominator = self.convert_fraction_into_float(other_fraction, "*")
+        if is_fraction is None:
+            self.counter = result_counter
+            self.denominator = result_denominator
             return self.counter
-        self.other_counter, self.other_denominator = self.seperateFraction(other_fraction)
-        self.counter = int(self.counter) * int(self.other_counter)
-        self.denominator = int(self.denominator) * int(self.other_denominator)
+            
+        # Use Fraction for the calculation
+        a = Fraction(self.counter, self.denominator)
+        b = Fraction(*self.seperateFraction(other_fraction))
+        
+        result = a * b
+        self.counter = result.numerator
+        self.denominator = result.denominator
 
     def division(self, other_fraction):
-        is_fraction, self.counter, self.denominator = self.convert_fraction_into_float(other_fraction, "/")
-        if is_fraction == None:
+        is_fraction, result_counter, result_denominator = self.convert_fraction_into_float(other_fraction, "/")
+        if is_fraction is None:
+            self.counter = result_counter
+            self.denominator = result_denominator
             return self.counter
-        self.other_counter, self.other_denominator = self.seperateFraction(other_fraction)
-        self.multiplication(f'{self.other_denominator}/{self.other_counter}')
+            
+        # Use Fraction for the calculation
+        a = Fraction(self.counter, self.denominator)
+        b = Fraction(*self.seperateFraction(other_fraction))
+        
+        result = a / b
+        self.counter = result.numerator
+        self.denominator = result.denominator
 
     def power(self, exponent):
-        is_fraction, self.counter, self.denominator = self.convert_fraction_into_float(exponent, "^")
-        if is_fraction == None:
+        is_fraction, result_counter, result_denominator = self.convert_fraction_into_float(exponent, "^")
+        if is_fraction is None:
+            self.counter = result_counter
+            self.denominator = result_denominator
             return self.counter
+        
+        # Use Fraction for integer exponents
+        a = Fraction(self.counter, self.denominator)
+        result = a ** int(exponent)
+        self.counter = result.numerator
+        self.denominator = result.denominator
 
-        counter = int(self.counter)
-        denominator = int(self.denominator)
-        exponent = int(exponent)
-        if exponent == 0:
-            self.counter = 1
-            self.denominator = 1
-        elif exponent >= 1:
-            for i in range(0, exponent-1):
-                self.counter = int(self.counter) * counter
-                self.denominator = int(self.denominator) * denominator
-        elif exponent <= -1:
-            inversed_counter = int(self.counter)
-            inversed_denominator = int(self.denominator)
-            for i in range(exponent+1, 0):
-                inversed_counter = inversed_counter * counter
-                inversed_denominator = inversed_denominator * denominator
-            self.counter = int(inversed_denominator)
-            self.denominator = int(inversed_counter)
     def reduceFraction(self):
-        if "." in str(self.counter):
-            # only dezimal number --> no need to reduce
-            #print("is float")
+        if isinstance(self.counter, float):
             return float(self.counter)
-        #print("is fraction")
-        self.counter = int(self.counter)
-        self.denominator = int(self.denominator)
-        d = gcd(self.counter, self.denominator)
-        self.counter = self.counter // d
-        self.denominator = self.denominator // d
+        
+        # Use Fraction to reduce
+        frac = Fraction(self.counter, self.denominator)
+        self.counter = frac.numerator
+        self.denominator = frac.denominator
+        
         if self.denominator == 1:
             return self.counter
         else:
             return self.counter, self.denominator
 
     def convert_fraction_into_float(self, other_fraction, operation):
-        if "."not in str(self.fraction) and "." not in str(other_fraction):
+        # Handle cases where either value is a floating point number
+        if "." not in str(self.fraction) and "." not in str(other_fraction):
             return True, self.counter, self.denominator
-        if "." in str(self.fraction):
+        
+        # Handle floating point operations
+        if "." in str(self.fraction) or "." in str(other_fraction):
             try:
-                if operation == "+":
-                    self.floating_number = float(self.fraction) + float(other_fraction)
-                elif operation == "-":
-                    self.floating_number = float(self.fraction) - float(other_fraction)
-                elif operation == "*":
-                    self.floating_number = float(self.fraction) * float(other_fraction)
-                elif operation == "/":
-                    self.floating_number = float(self.fraction) * float(other_fraction)
-                elif operation == "^":
-                    self.floating_number = pow(float(self.fraction), float(other_fraction))
+                a = float(self.fraction)
+                b = float(other_fraction)
+                
+                if operation == "+": result = a + b
+                elif operation == "-": result = a - b
+                elif operation == "*": result = a * b
+                elif operation == "/": result = a / b
+                elif operation == "^": result = pow(a, b)
+                
+                return None, result, 1
             except:
-                self.other_counter, self.other_denominator = self.seperateFraction(other_fraction)
-                self.other_counter = self.other_counter / self.other_denominator
-                if operation == "+":
-                    self.floating_number = float(self.fraction) + float(self.other_counter)
-                elif operation == "-":
-                    self.floating_number = float(self.fraction) - float(self.other_counter)
-                elif operation == "*":
-                    self.floating_number = float(self.fraction) * float(self.other_counter)
-                elif operation == "/":
-                    self.floating_number = float(self.fraction) / float(self.other_counter)
-                elif operation == "^":
-                    self.floating_number = pow(float(self.fraction), float(self.other_counter))
-            return None, self.floating_number, 1
-        if "." in str(other_fraction):
-            try:
-                if operation == "+":
-                    self.floating_number =  float(self.fraction) + float(other_fraction)
-                elif operation == "-":
-                    self.floating_number = float(self.fraction) - float(other_fraction)
-                elif operation == "*":
-                    self.floating_number = float(self.fraction) * float(other_fraction)
-                elif operation == "/":
-                    self.floating_number = float(self.fraction) / float(other_fraction)
-                elif operation == "^":
-                    self.floating_number = pow(float(self.fraction), float(other_fraction))
-            except:
-                self.counter, self.denominator = self.seperateFraction(self.fraction)
-                self.counter = self.counter / self.denominator
-                if operation == "+":
-                    self.floating_number = float(self.counter) + float(other_fraction)
-                elif operation == "-":
-                    self.floating_number = float(self.counter) - float(other_fraction)
-                elif operation == "*":
-                    self.floating_number = float(self.counter) * float(other_fraction)
-                elif operation == "/":
-                    self.floating_number = float(self.counter) / float(other_fraction)
-                elif operation == "^":
-                    self.floating_number = pow(float(self.counter), float(other_fraction))
-            return None, self.floating_number, 1
+                # Handle mixed fraction and float operations
+                if "." in str(self.fraction):
+                    a = float(self.fraction)
+                    other_counter, other_denominator = self.seperateFraction(other_fraction)
+                    b = other_counter / other_denominator
+                    
+                    if operation == "+": result = a + b
+                    elif operation == "-": result = a - b
+                    elif operation == "*": result = a * b
+                    elif operation == "/": result = a / b
+                    elif operation == "^": result = pow(a, b)
+                    
+                    return None, result, 1
+                else:
+                    a = self.counter / self.denominator
+                    b = float(other_fraction)
+                    
+                    if operation == "+": result = a + b
+                    elif operation == "-": result = a - b
+                    elif operation == "*": result = a * b
+                    elif operation == "/": result = a / b
+                    elif operation == "^": result = pow(a, b)
+                    
+                    return None, result, 1
+        
+        return True, self.counter, self.denominator
